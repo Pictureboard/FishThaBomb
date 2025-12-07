@@ -1,14 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fish Tha Bomb!</title>
+    <title>Fish Tha Bomb</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Fish Tha Bomb!</h1>
 
-    <p id="status">Connessione…</p>
+    <!-- 🟦 LOBBY SCREEN -->
+    <div id="lobbyScreen" class="screen">
+        <h1>Fish Tha Bomb</h1>
+
+        <div class="card">
+            <h2>Lobby</h2>
+            <input id="roomIdInput" type="text" placeholder="ID stanza">
+            <button id="createBtn">Crea Stanza</button>
+            <button id="joinBtn">Entra nella Stanza</button>
+        </div>
+
+        <div class="card">
+            <h3>Stanze Disponibili</h3>
+            <ul id="roomList"></ul>
+        </div>
+
+        <p id="status"></p>
+        <p id="messages"></p>
+    </div>
+
+
+    <!-- 🟩 ROOM SCREEN -->
+    <div id="roomScreen" class="screen hidden">
+        <h2>Stanza: <span id="currentRoomName"></span></h2>
+        <p id="roomStatus">In attesa di altri giocatori...</p>
+
+        <button id="leaveRoomBtn">Abbandona Stanza</button>
+    </div>
+
+
+    <!-- 🟥 GAME SCREEN (ancora vuota, la useremo dopo) -->
+    <div id="gameScreen" class="screen hidden">
+        <h2>Partita in corso...</h2>
+    </div>
+
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>

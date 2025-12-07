@@ -11,7 +11,13 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname, '../client')));
 
 io.on('connection', socket => {
-    console.log('Nuovo client connesso:', socket.id);
+    console.log('Nuovo client connesso con socket:', socket.id);
+
+    socket.on("registerUser", (userId) => {
+        // Agiunge userId all'oggetto socket
+        socket.userId = userId;
+        console.log("Utente:", userId, "col socket:", socket.id);
+    });
 
     // Gestione stanze
     socket.on("createRoom", (roomId) => {
