@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Serve la cartella client come contenuto statico
+// Serve la cartella client come contenuto statico con express
 app.use(express.static(path.join(__dirname, '../client')));
 
 // Oggetto per gestire la stanza

@@ -56,19 +56,25 @@ socket.on("connect", () => {
         "Connesso! SocketID: " + socket.id + " | UserID: " + userId;
 });
 
-// Lista stanze
+// Lista stanze con bottoni
 socket.on("roomList", rooms => {
-    roomList.innerHTML = ""; 
+    roomList.innerHTML = "";
 
     rooms.forEach(r => {
         const li = document.createElement("li");
-        li.textContent = `${r.name} (${r.size}/2)`;
-        li.onclick = () => {
-            roomInput.value = r.name;
+
+        // Bottone che permette di entrare direttamente
+        const btn = document.createElement("button");
+        btn.textContent = `${r.name} (${r.size}/2)`;
+        btn.onclick = () => {
+            socket.emit("joinRoom", r.name);
         };
+
+        li.appendChild(btn);
         roomList.appendChild(li);
     });
 });
+
 
 // Conferma creazione stanza
 socket.on("roomCreated", roomId => {
