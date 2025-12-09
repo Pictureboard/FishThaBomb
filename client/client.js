@@ -35,7 +35,23 @@ document.getElementById("joinBtn").onclick = () => {
     if (roomId !== "") socket.emit("joinRoom", roomId);
 };
 
+document.getElementById("readyBtn").onclick = () => {
+    // controlla che sul bottone ci sia scritto "Ready"
+    if (document.getElementById("readyBtn").textContent === "Ready") {
+        // cambia il testo del bottone in Not Ready
+        document.getElementById("readyBtn").textContent = "Not Ready";
+        socket.emit("playerReady");
+    }
+    else if (document.getElementById("readyBtn").textContent === "Not Ready") {
+        // cambia il testo del bottone in Ready
+        document.getElementById("readyBtn").textContent = "Ready";
+        socket.emit("playerNotReady");
+    } 
+};
+
 document.getElementById("leaveRoomBtn").onclick = () => {
+    // Resetta il bottone Ready
+    document.getElementById("readyBtn").textContent = "Ready";
     socket.emit("leaveRoom");
 };
 
@@ -92,7 +108,7 @@ socket.on("roomJoined", roomId => {
 
 socket.on("roomUpdate", data => {
     document.getElementById("roomStatus").textContent =
-        `Giocatori nella stanza: ${data.players.length}/2`;
+        `Giocatori nella stanza: ${data.players.length}/2 | Pronti: ${data.nReady}/2`;
 });
 
 // Errore

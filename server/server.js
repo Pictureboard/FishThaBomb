@@ -13,6 +13,23 @@ app.use(express.static(path.join(__dirname, '../client')));
 // Oggetto per gestire la stanza
 const roomsData = {};
 
+//roomsData[roomId1] = {
+//    players: [userId1, userId2],
+//    ready: {userId1: false, userId2: false}, (need both to be true to start game)
+//    nReady: 0,
+//    state: waiting | playing | finished,
+//    boardHidden: [36 cells array], (randomply generated when game starts)
+//    boardVisible: [36 cells array], (updated during the game)
+//    scores: {userId1: 0, userId2: 0}, (need 5 to win)
+//    lives: {userId1: 3, userId2: 3}, (at 0 lives you automatically lose)
+//    currentTurn: userId1 | userId2,
+//    turnTimer: null (a turn can last max 20 seconds)
+//    }
+//roomsData[roomId2] = { ... }
+
+
+// Quando un client si connette
+
 io.on("connection", socket => {
     console.log("Nuovo client connesso:", socket.id);
 
@@ -23,7 +40,7 @@ io.on("connection", socket => {
         sendRoomList();
     });
 
-    // Funzione per trovare stanza dell'utente
+    // Funzione per trovare stanza dell'utente (ritorna puntatore [nomeStanza, oggettoStanza] o undefined)
     function findRoomByUser(userId) {
         return Object.entries(roomsData).find(([name, room]) =>
             room.players.includes(userId)
@@ -50,7 +67,9 @@ io.on("connection", socket => {
 
         // Crea stanza
         roomsData[roomId] = {
-            players: [socket.userId]
+            players: [socket.userId],
+            ready: { [socket.userId]: false },
+            nReady: 0
         };
 
         socket.join(roomId);
@@ -96,6 +115,7 @@ io.on("connection", socket => {
 
         // Join effettivo
         room.players.push(socket.userId);
+        room.ready[socket.userId] = false;
         socket.join(roomId);
         socket.currentRoom = roomId;
 
@@ -133,6 +153,44 @@ io.on("connection", socket => {
             leaveRoom(socket, roomId);
         }
     });
+
+    // --------------------------------
+    // GIOCATORE PRONTO
+    // --------------------------------
+    socket.on("playerReady", () => {
+        const existing = findRoomByUser(socket.userId);
+        if (!existing) {
+            socket.emit("roomError", "Non sei in nessuna stanza.");
+            return;
+        }
+
+        const [roomId, room] = existing;
+        // modifica l'oggetto lista ready della stanza
+        room.ready[socket.userId] = true;
+        room.nReady += 1;
+        console.log(`⚡ ${socket.userId} è pronto nella stanza ${roomId} (${room.nReady}/2)`);
+        sendRoomUpdate(roomId);
+    });
+
+    // --------------------------------
+    // GIOCATORE NON PRONTO
+    // --------------------------------
+    socket.on("playerNotReady", () => {
+        const existing = findRoomByUser(socket.userId);
+        if (!existing) {
+            socket.emit("roomError", "Non sei in nessuna stanza.");
+            return;
+        }
+
+        const [roomId, room] = existing;
+        // modifica l'oggetto lista ready della stanza
+        room.ready[socket.userId] = false;
+        room.nReady -= 1;
+        console.log(`⚡ ${socket.userId} non è più pronto nella stanza ${roomId} (${room.nReady}/2)`);
+        sendRoomUpdate(roomId);
+    });
+
+    
 
 
     // --------------------------------
@@ -175,7 +233,8 @@ io.on("connection", socket => {
         if (!room) return;
 
         io.to(roomId).emit("roomUpdate", {
-            players: room.players
+            players: room.players,
+            nReady: room.nReady
         });
     }
 });
