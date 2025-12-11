@@ -35,7 +35,7 @@ document.getElementById("joinBtn").onclick = () => {
     if (roomId !== "") socket.emit("joinRoom", roomId);
 };
 
-document.getElementById("readyBtn").onclick = () => {
+/*document.getElementById("readyBtn").onclick = () => {
     // controlla che sul bottone ci sia scritto "Ready"
     if (document.getElementById("readyBtn").textContent === "Ready") {
         // cambia il testo del bottone in Not Ready
@@ -46,8 +46,30 @@ document.getElementById("readyBtn").onclick = () => {
         // cambia il testo del bottone in Ready
         document.getElementById("readyBtn").textContent = "Ready";
         socket.emit("playerNotReady");
-    } 
+    }
+
+    // c'è modo per non basarsi sul testo del bottone per scegliere che messaggio inviarer al server?
+
+};*/
+
+let isReady = false;
+
+document.getElementById("readyBtn").onclick = () => {
+
+    // toggle stato interno
+    isReady = !isReady;
+
+    // aggiorno il testo del bottone, ma è puramente estetico
+    document.getElementById("readyBtn").textContent = isReady ? "Not Ready" : "Ready";
+
+    // invio messaggio corretto al server basandomi sullo stato **non modificabile dall’utente**
+    if (isReady) {
+        socket.emit("playerReady");
+    } else {
+        socket.emit("playerNotReady");
+    }
 };
+
 
 document.getElementById("leaveRoomBtn").onclick = () => {
     // Resetta il bottone Ready

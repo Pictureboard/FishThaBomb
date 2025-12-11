@@ -15,13 +15,21 @@ const roomsData = {};
 
 //roomsData[roomId1] = {
 //    players: [userId1, userId2],
-//    ready: {userId1: false, userId2: false}, (need both to be true to start game)
+//    playersData: {
+//        userId1: {
+//            ready: false, (need both to be true to start game)
+//            score: 0, (need 5 to win)
+//            lives: 3 (at 0 lives you automatically lose)
+//        },
+//        userId2: { ... }
+//
+//    ready: {userId1: false, userId2: false}, (need both to be true to start game) [need 2 remove]
 //    nReady: 0,
 //    state: waiting | playing | finished,
 //    boardHidden: [36 cells array], (randomply generated when game starts)
 //    boardVisible: [36 cells array], (updated during the game)
-//    scores: {userId1: 0, userId2: 0}, (need 5 to win)
-//    lives: {userId1: 3, userId2: 3}, (at 0 lives you automatically lose)
+//    scores: {userId1: 0, userId2: 0}, (need 5 to win) [need 2 remove]
+//    lives: {userId1: 3, userId2: 3}, (at 0 lives you automatically lose) [need 2 remove]
 //    currentTurn: userId1 | userId2,
 //    turnTimer: null (a turn can last max 20 seconds)
 //    }
@@ -68,7 +76,14 @@ io.on("connection", socket => {
         // Crea stanza
         roomsData[roomId] = {
             players: [socket.userId],
-            ready: { [socket.userId]: false },
+            //ready: { [socket.userId]: false },
+            playersData: {
+                [socket.userId]: {
+                    ready: false,
+                    score: 0,
+                    lives: 3
+                }
+            },
             nReady: 0
         };
 
@@ -115,7 +130,13 @@ io.on("connection", socket => {
 
         // Join effettivo
         room.players.push(socket.userId);
-        room.ready[socket.userId] = false;
+        //room.ready[socket.userId] = false;
+        room.playersData[socket.userId] = {
+            ready: false,
+            score: 0,
+            lives: 3
+        };
+
         socket.join(roomId);
         socket.currentRoom = roomId;
 
@@ -166,7 +187,8 @@ io.on("connection", socket => {
 
         const [roomId, room] = existing;
         // modifica l'oggetto lista ready della stanza
-        room.ready[socket.userId] = true;
+        //room.ready[socket.userId] = true;
+        room.playersData[socket.userId].ready = true;
         room.nReady += 1;
         console.log(`⚡ ${socket.userId} è pronto nella stanza ${roomId} (${room.nReady}/2)`);
         sendRoomUpdate(roomId);
@@ -184,7 +206,8 @@ io.on("connection", socket => {
 
         const [roomId, room] = existing;
         // modifica l'oggetto lista ready della stanza
-        room.ready[socket.userId] = false;
+        //room.ready[socket.userId] = false;
+        room.playersData[socket.userId].ready = false;
         room.nReady -= 1;
         console.log(`⚡ ${socket.userId} non è più pronto nella stanza ${roomId} (${room.nReady}/2)`);
         sendRoomUpdate(roomId);
@@ -202,6 +225,21 @@ io.on("connection", socket => {
 
         // Rimuovi player
         room.players = room.players.filter(p => p !== socket.userId);
+
+        // rimuovi player da roomsData.ready
+        /*if (room.ready[socket.userId] !== undefined) {
+            if (room.ready[socket.userId]) {
+                room.nReady -= 1;
+            }
+            delete room.ready[socket.userId];
+        }*/
+        if (room.playersData[socket.userId] !== undefined) {
+            if (room.playersData[socket.userId].ready) {
+                room.nReady -= 1;
+            }
+            delete room.playersData[socket.userId];
+        }
+
         socket.leave(roomId);
         socket.currentRoom = null;
 
