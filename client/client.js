@@ -183,6 +183,9 @@ socket.on("startGame", () => {
         
         // Click sulla cella per rivelare il contenuto
         cell.onclick = () => {
+            // controllo per vedere ceh sia il turno del giocatore viene gestito dal server
+
+            // invia l'evento solo se la cella non è già stata rivelata
             if (!cell.classList.contains("revealed")) {
                 socket.emit("cellClick", i);
             }

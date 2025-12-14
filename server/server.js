@@ -26,8 +26,16 @@ const roomsData = {};
 //    ready: {userId1: false, userId2: false}, (need both to be true to start game) [need 2 remove]
 //    nReady: 0,
 //    state: waiting | playing | finished,
-//    boardHidden: [36 cells array], (randomply generated when game starts)
-//    boardVisible: [36 cells array], (updated during the game)
+//
+//    boardHidden: [36 cells array], (randomly generated when game starts) [old prototype]
+//
+//    boardhidden: (it need to contain the actual content and a boolean to check if it's revealed or not on every index, it goes up to 36)
+//    [
+//        { content: 'fish', revealed: false },
+//        { content: 'bomb', revealed: false },
+//        ...    
+//
+//    boardVisible: [36 cells array], (updated during the game) [need 2 remove]
 //    scores: {userId1: 0, userId2: 0}, (need 5 to win) [need 2 remove]
 //    lives: {userId1: 3, userId2: 3}, (at 0 lives you automatically lose) [need 2 remove]
 //    currentTurn: userId1 | userId2,
@@ -304,8 +312,8 @@ io.on("connection", socket => {
         const nBombs = 8;
         const nNukes = 2;
         
-        // Crea array con tutti gli elementi
-        const elements = [
+        // Crea array con tutti gli elementi [old prototype]
+        /*const elements = [
             ...Array(nFish).fill('fish'),
             ...Array(nSpecialFish).fill('specialFish'),
             ...Array(nBoots).fill('boot'),
@@ -321,6 +329,24 @@ io.on("connection", socket => {
         
         // boardHidden è ora popolato e mescolato
 
+        room.boardHidden = elements;*/
+
+        // Crea array con tutti gli elementi con revealed false
+        const elements = [
+            ...Array(nFish).fill({ content: 'fish', revealed: false }),
+            ...Array(nSpecialFish).fill({ content: 'specialFish', revealed: false }),
+            ...Array(nBoots).fill({ content: 'boot', revealed: false }),
+            ...Array(nBombs).fill({ content: 'bomb', revealed: false }),
+            ...Array(nNukes).fill({ content: 'nuke', revealed: false })
+        ];
+
+        // Mescola l'array usando Fisher-Yates shuffle
+        for (let i = elements.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [elements[i], elements[j]] = [elements[j], elements[i]];
+        }
+
+        // boardHidden è ora popolato e mescolato
         room.boardHidden = elements;
         
         // scegli il giocatore che inizia
@@ -334,7 +360,7 @@ io.on("connection", socket => {
     }
 
     // --------------------------------
-    // FUNZIONE: TIMER TURNO
+    // FUNZIONE: TIMER TURNO [da integrare nella logica del turno]
     // --------------------------------
     function startTurnTimer(roomId) {
         const room = roomsData[roomId];
@@ -349,6 +375,100 @@ io.on("connection", socket => {
             // Passa al turno successivo (implementazione da fare)
         }, 20000);
     }
+
+    // ---------------------------------
+    // GESTIONE CLICK CELLA
+    // ---------------------------------
+    socket.on("cellClick", cellIndex => {
+        const existing = findRoomByUser(socket.userId);
+        if (!existing) {
+            socket.emit("roomError", "Non sei in nessuna stanza.");
+            return;
+        }
+        const [roomId, room] = existing;
+
+        // Controlla se è il turno del giocatore
+        if (room.currentTurn !== socket.userId) {
+            socket.emit("roomError", "Non è il tuo turno.");
+            return;
+        }
+
+        // Gestisci il click sulla cella
+        const cellData = room.boardHidden[cellIndex];
+        if (cellData.revealed) {
+            socket.emit("roomError", "Cella già rivelata.");
+            return;
+        }
+
+        // Rivela la cella a tutti i giocatori
+        room.boardHidden[cellIndex].revealed = true;
+        io.to(roomId).emit("revealCell", {
+            player: socket.userId,
+            index: cellIndex,
+            content: room.boardHidden[cellIndex].content
+        });
+
+        // Una volta rilevata la cella, dobbiamo modificare vite/punteggio/turno in base al contenuto
+
+        // In base al contenuto aggiorniamo le statistiche del giocatore dentro room.playersData[socket.userId] con uno switch case
+        switch (cellData.content) {
+            case 'fish':
+                room.playersData[socket.userId].score += 1;
+                io.to(roomId).emit("updateScore", {
+                    player: socket.userId,
+                    score: room.playersData[socket.userId].score
+                });
+                break;
+            case 'specialFish':
+                room.playersData[socket.userId].score += 2;
+                io.to(roomId).emit("updateScore", {
+                    player: socket.userId,
+                    score: room.playersData[socket.userId].score
+                });
+                break;
+            case 'boot':
+                // niente punteggio
+                break;
+            case 'bomb':
+                room.playersData[socket.userId].lives -= 1;
+                io.to(roomId).emit("updateLives", {
+                    player: socket.userId,
+                    lives: room.playersData[socket.userId].lives
+                });
+                break;
+            case 'nuke':
+                room.playersData[socket.userId].lives = 0;
+                io.to(roomId).emit("updateLives", {
+                    player: socket.userId,
+                    lives: room.playersData[socket.userId].lives
+                });
+                break;
+        }
+
+        // Controlla vittoria/sconfitta
+        if (room.playersData[socket.userId].score >= 5) {
+            io.to(roomId).emit("gameOver", {
+                winner: socket.userId
+            });
+            console.log(`🏆 ${socket.userId} ha vinto nella stanza ${roomId}`);
+            return;
+        }
+
+        if (room.playersData[socket.userId].lives <= 0) {
+            const otherPlayer = room.players.find(p => p !== socket.userId);
+            io.to(roomId).emit("gameOver", {
+                winner: otherPlayer
+            });
+            console.log(`💀 ${socket.userId} ha perso nella stanza ${roomId}`);
+            return;
+        }
+
+        // Passa al turno successivo (implementazione semplice: alterna tra i due giocatori)
+        const otherPlayer = room.players.find(p => p !== socket.userId);
+        room.currentTurn = otherPlayer;
+        io.to(roomId).emit("playerTurn", { startingPlayer: otherPlayer });
+    });
+        
 
 });
 
