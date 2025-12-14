@@ -24,6 +24,19 @@ const status = document.getElementById("status");
 const messages = document.getElementById("messages");
 const currentRoomName = document.getElementById("currentRoomName");
 
+// Game Screen elements
+const gameStatus = document.getElementById("gameStatus");
+const turnTimer = document.getElementById("turnTimer");
+const timeLeft = document.getElementById("timeLeft");
+const currentTurn = document.getElementById("currentTurn");
+const opponentLives = document.getElementById("opponentLives");
+const opponentScore = document.getElementById("opponentScore");
+const gameGrid = document.getElementById("gameGrid");
+const yourLives = document.getElementById("yourLives");
+const yourScore = document.getElementById("yourScore");
+const leaveGameBtn = document.getElementById("leaveGameBtn");
+
+
 // Bottoni
 document.getElementById("createBtn").onclick = () => {
     const roomId = roomInput.value.trim();
@@ -142,4 +155,39 @@ socket.on("roomError", msg => {
 socket.on("roomLeft", () => {
     showScreen(lobbyScreen);
     messages.textContent = "⚠️ Sei tornato alla lobby.";
+});
+
+// GESTIONE PARRTITA
+socket.on("startGame", () => {
+    showScreen(gameScreen);
+    gameStatus.textContent = "La partita è iniziata!";
+    
+    // Resetta il bottone Ready per la prossima partita
+    isReady = false;
+    document.getElementById("readyBtn").textContent = "Ready";
+
+    // Pulisce la griglia di gioco
+    gameGrid.innerHTML = "";
+
+    // Inizializza la griglia di gioco 6x6 per crearla e visualizzarla nella UI della partita dentro a gameGrid
+    const gridSize = 36; // 6x6
+    
+    for (let i = 0; i < gridSize; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i; // memorizza l'indice della cella
+        
+        // Ogni cella inizia come nascosta (mostra un punto interrogativo o icona)
+        cell.textContent = "🫧";
+
+        
+        // Click sulla cella per rivelare il contenuto
+        cell.onclick = () => {
+            if (!cell.classList.contains("revealed")) {
+                socket.emit("cellClick", i);
+            }
+        };
+        
+        gameGrid.appendChild(cell);
+    }
 });

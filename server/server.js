@@ -192,6 +192,14 @@ io.on("connection", socket => {
         room.nReady += 1;
         console.log(`⚡ ${socket.userId} è pronto nella stanza ${roomId} (${room.nReady}/2)`);
         sendRoomUpdate(roomId);
+
+        if (room.nReady === 2) {
+            console.log(`🚀 Stanza ${roomId} pronta a iniziare il gioco!`);
+            room.state = "playing";
+            //io.to(roomId).emit("startGame", {}); // partita inizia qui
+            startGame(roomId);
+        }
+        
     });
 
     // --------------------------------
@@ -265,7 +273,9 @@ io.on("connection", socket => {
         io.emit("roomList", list);
     }
 
-    // Aggiornamento stanza
+    // --------------------------------
+    // AGGIORNAMENTO STANZA
+    // --------------------------------
     function sendRoomUpdate(roomId) {
         const room = roomsData[roomId];
         if (!room) return;
@@ -275,6 +285,71 @@ io.on("connection", socket => {
             nReady: room.nReady
         });
     }
+
+    // --------------------------------
+    // START GAME
+    // --------------------------------
+    function startGame(roomId) {
+        const room = roomsData[roomId];
+        if (!room) return;
+        io.to(roomId).emit("startGame", {}); // partita inizia qui
+
+        console.log(`🎮 Partita iniziata nella stanza ${roomId}`);
+
+        //popola boardHidden con valori pseudo-random
+        const boardSize = 36;
+        const nFish = 12;
+        const nSpecialFish = 6;
+        const nBoots = 8;
+        const nBombs = 8;
+        const nNukes = 2;
+        
+        // Crea array con tutti gli elementi
+        const elements = [
+            ...Array(nFish).fill('fish'),
+            ...Array(nSpecialFish).fill('specialFish'),
+            ...Array(nBoots).fill('boot'),
+            ...Array(nBombs).fill('bomb'),
+            ...Array(nNukes).fill('nuke')
+        ];
+        
+        // Mescola l'array usando Fisher-Yates shuffle
+        for (let i = elements.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [elements[i], elements[j]] = [elements[j], elements[i]];
+        }
+        
+        // boardHidden è ora popolato e mescolato
+
+        room.boardHidden = elements;
+        
+        // scegli il giocatore che inizia
+        const startingPlayer = room.players[Math.floor(Math.random() * room.players.length)];
+        room.currentTurn = startingPlayer;
+        io.to(roomId).emit("playerTurn", { startingPlayer });
+
+        // inizio timer del turno (20 secondi max per turno)
+
+
+    }
+
+    // --------------------------------
+    // FUNZIONE: TIMER TURNO
+    // --------------------------------
+    function startTurnTimer(roomId) {
+        const room = roomsData[roomId];
+        if (!room) return;
+        if (room.turnTimer) {
+            clearTimeout(room.turnTimer);
+        }
+        room.turnTimer = setTimeout(() => {
+            // Gestisci fine turno per timeout
+            io.to(roomId).emit("turnTimeout", { player: room.currentTurn });
+            console.log(`⏰ Turno di ${room.currentTurn} è scaduto nella stanza ${roomId}`);
+            // Passa al turno successivo (implementazione da fare)
+        }, 20000);
+    }
+
 });
 
 
