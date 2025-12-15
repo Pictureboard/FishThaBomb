@@ -50,8 +50,7 @@ document.getElementById("createBtn").onclick = () => {
   const validRoomId = /^[a-zA-Z0-9_\-]+$/.test(roomId);
   if (roomId !== "" && validRoomId) socket.emit("createRoom", roomId);
   else {
-    messages.textContent =
-      "❌ Nome stanza non valido.";
+    messages.textContent = "❌ Nome stanza non valido.";
   }
 };
 
@@ -59,10 +58,9 @@ document.getElementById("joinBtn").onclick = () => {
   const roomId = roomInput.value.trim();
   const validRoomId = /^[a-zA-Z0-9_\-]+$/.test(roomId);
   if (roomId !== "" && validRoomId) socket.emit("joinRoom", roomId);
-    else {
-        messages.textContent =
-            "❌ Nome stanza non valido.";
-    }
+  else {
+    messages.textContent = "❌ Nome stanza non valido.";
+  }
 };
 
 /*document.getElementById("readyBtn").onclick = () => {
@@ -127,7 +125,9 @@ socket.on("connect", () => {
 
 // Gestione connessione duplicata | importante per evitare che lo stesso userId venga usato in più tab o dispositivi
 socket.on("userAlreadyConnected", () => {
-  console.warn("⚠️ Questo UserID è già connesso da un'altra tab o dispositivo.");
+  console.warn(
+    "⚠️ Questo UserID è già connesso da un'altra tab o dispositivo."
+  );
   showScreen(userIdWarning);
   status.textContent = "❌ UserID già connesso altrove";
 });
@@ -185,7 +185,15 @@ socket.on("roomLeft", () => {
 // GESTIONE PARRTITA
 socket.on("startGame", () => {
   showScreen(gameScreen);
+
+  // resetta lo stato del messaggio di stato della partita
   gameStatus.textContent = "La partita è iniziata!";
+
+  //resetta punteggi e vite
+  yourScore.textContent = "Punteggio: 0";
+  opponentScore.textContent = "Punteggio avversario: 0";
+  yourLives.textContent = "Vite: ❤️❤️❤️";
+  opponentLives.textContent = "Vite avversario: ❤️❤️❤️";
 
   // Resetta il bottone Ready per la prossima partita
   isReady = false;

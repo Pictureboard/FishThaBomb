@@ -194,7 +194,9 @@ io.on("connection", (socket) => {
     // Rimuovi userId dalla lista degli utenti connessi
     if (socket.userId) {
       connectedUsers.delete(socket.userId);
-      console.log(`[DISCONNECT] User ${socket.userId} rimosso dalla lista connessi`);
+      console.log(
+        `[DISCONNECT] User ${socket.userId} rimosso dalla lista connessi`
+      );
     }
 
     const existing = findRoomByUser(socket.userId);
@@ -339,6 +341,20 @@ io.on("connection", (socket) => {
       room.playersData[playerId].ready = false;
     }
 
+    // resetta tutti i dati della partita vecchia
+    room.boardHidden = [];
+    room.currentTurn = null;
+
+    // resetta punteggi e vite
+    for (const playerId of room.players) {
+      room.playersData[playerId].score = 0;
+      room.playersData[playerId].lives = 3;
+    }
+    
+    /*if (room.turnTimer) {
+      clearTimeout(room.turnTimer);
+      room.turnTimer = null;
+    }*/
 
     console.log(`🎮 Partita iniziata nella stanza ${roomId}`);
 
@@ -390,7 +406,7 @@ io.on("connection", (socket) => {
     const startingPlayer =
       room.players[Math.floor(Math.random() * room.players.length)];
     room.currentTurn = startingPlayer;
-    io.to(roomId).emit("playerTurn", { startingPlayer });
+    io.to(roomId).emit("playerTurn", room.currentTurn);
 
     // inizio timer del turno (20 secondi max per turno)
   }
