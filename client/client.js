@@ -179,7 +179,6 @@ socket.on("startGame", () => {
         
         // Ogni cella inizia come nascosta (mostra un punto interrogativo o icona)
         cell.textContent = "🫧";
-
         
         // Click sulla cella per rivelare il contenuto
         cell.onclick = () => {
@@ -192,5 +191,36 @@ socket.on("startGame", () => {
         };
         
         gameGrid.appendChild(cell);
+    }
+});
+
+// Gestione messaggi inviati dal server durante la partita
+
+//REVEAL CELL
+socket.on("revealCell", data => {
+    const { index, content } = data;
+
+    // Aggiorna la cella nella griglia di gioco
+    const cell = gameGrid.querySelector(`div[data-index='${index}']`);
+    if (cell) {
+        cell.classList.add("revealed");
+        // Aggiorna il contenuto della cella in base a ciò che è stato rivelato
+        switch (content) {
+            case 'fish':
+                cell.textContent = "🐟";
+                break;
+            case 'specialFish':
+                cell.textContent = "🐠";
+                break;
+            case 'boot':
+                cell.textContent = "👢";
+                break;
+            case 'bomb':
+                cell.textContent = "💣";
+                break;
+            case 'nuke':
+                cell.textContent = "☢️";
+                break;
+        }
     }
 });

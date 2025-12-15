@@ -311,33 +311,14 @@ io.on("connection", socket => {
         const nBoots = 8;
         const nBombs = 8;
         const nNukes = 2;
-        
-        // Crea array con tutti gli elementi [old prototype]
-        /*const elements = [
-            ...Array(nFish).fill('fish'),
-            ...Array(nSpecialFish).fill('specialFish'),
-            ...Array(nBoots).fill('boot'),
-            ...Array(nBombs).fill('bomb'),
-            ...Array(nNukes).fill('nuke')
-        ];
-        
-        // Mescola l'array usando Fisher-Yates shuffle
-        for (let i = elements.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [elements[i], elements[j]] = [elements[j], elements[i]];
-        }
-        
-        // boardHidden è ora popolato e mescolato
 
-        room.boardHidden = elements;*/
-
-        // Crea array con tutti gli elementi con revealed false
+        // Crea array con tutti gli elementi con revealed false (ogni elemento è un oggetto indipendente)
         const elements = [
-            ...Array(nFish).fill({ content: 'fish', revealed: false }),
-            ...Array(nSpecialFish).fill({ content: 'specialFish', revealed: false }),
-            ...Array(nBoots).fill({ content: 'boot', revealed: false }),
-            ...Array(nBombs).fill({ content: 'bomb', revealed: false }),
-            ...Array(nNukes).fill({ content: 'nuke', revealed: false })
+            ...Array.from({ length: nFish }, () => ({ content: 'fish', revealed: false })),
+            ...Array.from({ length: nSpecialFish }, () => ({ content: 'specialFish', revealed: false })),
+            ...Array.from({ length: nBoots }, () => ({ content: 'boot', revealed: false })),
+            ...Array.from({ length: nBombs }, () => ({ content: 'bomb', revealed: false })),
+            ...Array.from({ length: nNukes }, () => ({ content: 'nuke', revealed: false }))
         ];
 
         // Mescola l'array usando Fisher-Yates shuffle
@@ -348,6 +329,9 @@ io.on("connection", socket => {
 
         // boardHidden è ora popolato e mescolato
         room.boardHidden = elements;
+
+        // fai un console log per vedere la boardHidden generata
+        console.log(`🧩 boardHidden per la stanza ${roomId}:`, room.boardHidden);
         
         // scegli il giocatore che inizia
         const startingPlayer = room.players[Math.floor(Math.random() * room.players.length)];
@@ -393,7 +377,7 @@ io.on("connection", socket => {
             return;
         }
 
-        // Gestisci il click sulla cella
+        // Gestisci il click sulla cella controllando se è già stata rivelata
         const cellData = room.boardHidden[cellIndex];
         if (cellData.revealed) {
             socket.emit("roomError", "Cella già rivelata.");
@@ -445,6 +429,9 @@ io.on("connection", socket => {
                 break;
         }
 
+        // debug console log per vedere la boardHidden aggiornata
+        console.log(`🧩 boardHidden aggiornata per la stanza ${roomId}:`, room.boardHidden);
+
         // Controlla vittoria/sconfitta
         if (room.playersData[socket.userId].score >= 5) {
             io.to(roomId).emit("gameOver", {
@@ -466,7 +453,7 @@ io.on("connection", socket => {
         // Passa al turno successivo (implementazione semplice: alterna tra i due giocatori)
         const otherPlayer = room.players.find(p => p !== socket.userId);
         room.currentTurn = otherPlayer;
-        io.to(roomId).emit("playerTurn", { startingPlayer: otherPlayer });
+        io.to(roomId).emit("playerTurn", room.currentTurn);
     });
         
 
