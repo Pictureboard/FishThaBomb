@@ -2,10 +2,12 @@
 let userId = localStorage.getItem("userId");
 
 if (!userId) {
-    // genera un ID unico e sicuro con timestamp
-    userId = `${crypto.randomUUID()}-${Date.now()}`;
-    localStorage.setItem("userId", userId);
+  // genera un ID unico e sicuro con timestamp
+  userId = `${crypto.randomUUID()}-${Date.now()}`;
+  localStorage.setItem("userId", userId);
 }
+
+// aggiungi controllo per verificare che questo userid non sia già collegato al server con altro socket (con un'altra istanza del client aka un'altra scheda aperta)
 
 console.log("UserID locale:", userId);
 
@@ -16,6 +18,7 @@ const socket = io();
 const lobbyScreen = document.getElementById("lobbyScreen");
 const roomScreen = document.getElementById("roomScreen");
 const gameScreen = document.getElementById("gameScreen");
+const userIdWarning = document.getElementById("userIdWarning");
 
 // UI elements
 const roomInput = document.getElementById("roomIdInput");
@@ -36,16 +39,15 @@ const yourLives = document.getElementById("yourLives");
 const yourScore = document.getElementById("yourScore");
 const leaveGameBtn = document.getElementById("leaveGameBtn");
 
-
 // Bottoni
 document.getElementById("createBtn").onclick = () => {
-    const roomId = roomInput.value.trim();
-    if (roomId !== "") socket.emit("createRoom", roomId);
+  const roomId = roomInput.value.trim();
+  if (roomId !== "") socket.emit("createRoom", roomId);
 };
 
 document.getElementById("joinBtn").onclick = () => {
-    const roomId = roomInput.value.trim();
-    if (roomId !== "") socket.emit("joinRoom", roomId);
+  const roomId = roomInput.value.trim();
+  if (roomId !== "") socket.emit("joinRoom", roomId);
 };
 
 /*document.getElementById("readyBtn").onclick = () => {
@@ -68,159 +70,208 @@ document.getElementById("joinBtn").onclick = () => {
 let isReady = false;
 
 document.getElementById("readyBtn").onclick = () => {
+  // toggle stato interno
+  isReady = !isReady;
 
-    // toggle stato interno
-    isReady = !isReady;
+  // aggiorno il testo del bottone, ma è puramente estetico
+  document.getElementById("readyBtn").textContent = isReady
+    ? "Not Ready"
+    : "Ready";
 
-    // aggiorno il testo del bottone, ma è puramente estetico
-    document.getElementById("readyBtn").textContent = isReady ? "Not Ready" : "Ready";
-
-    // invio messaggio corretto al server basandomi sullo stato **non modificabile dall’utente**
-    if (isReady) {
-        socket.emit("playerReady");
-    } else {
-        socket.emit("playerNotReady");
-    }
+  // invio messaggio corretto al server basandomi sullo stato **non modificabile dall’utente**
+  if (isReady) {
+    socket.emit("playerReady");
+  } else {
+    socket.emit("playerNotReady");
+  }
 };
 
-
 document.getElementById("leaveRoomBtn").onclick = () => {
-    // Resetta il bottone Ready
-    document.getElementById("readyBtn").textContent = "Ready";
-    socket.emit("leaveRoom");
+  // Resetta il bottone Ready
+  document.getElementById("readyBtn").textContent = "Ready";
+  socket.emit("leaveRoom");
 };
 
 // 🔄 Cambio schermate
 function showScreen(screen) {
-    lobbyScreen.classList.add("hidden");
-    roomScreen.classList.add("hidden");
-    gameScreen.classList.add("hidden");
+  userIdWarning.classList.add("hidden");
+  lobbyScreen.classList.add("hidden");
+  roomScreen.classList.add("hidden");
+  gameScreen.classList.add("hidden");
 
-    screen.classList.remove("hidden");
+  screen.classList.remove("hidden");
 }
 
 // Quando ci connettiamo, registriamo l'utente presso il server
 socket.on("connect", () => {
-    socket.emit("registerUser", userId);
+  socket.emit("registerUser", userId);
 
-    status.textContent =
-        "Connesso! SocketID: " + socket.id + " | UserID: " + userId;
+  status.textContent =
+    "Connesso! SocketID: " + socket.id + " | UserID: " + userId;
 });
 
 // Lista stanze con bottoni
-socket.on("roomList", rooms => {
-    roomList.innerHTML = "";
+socket.on("roomList", (rooms) => {
+  roomList.innerHTML = "";
 
-    rooms.forEach(r => {
-        const li = document.createElement("li");
+  rooms.forEach((r) => {
+    const li = document.createElement("li");
 
-        // Bottone che permette di entrare direttamente
-        const btn = document.createElement("button");
-        btn.textContent = `${r.name} (${r.size}/2)`;
-        btn.onclick = () => {
-            socket.emit("joinRoom", r.name);
-        };
+    // Bottone che permette di entrare direttamente
+    const btn = document.createElement("button");
+    btn.textContent = `${r.name} (${r.size}/2)`;
+    btn.onclick = () => {
+      socket.emit("joinRoom", r.name);
+    };
 
-        li.appendChild(btn);
-        roomList.appendChild(li);
-    });
+    li.appendChild(btn);
+    roomList.appendChild(li);
+  });
 });
 
-
 // Conferma creazione stanza
-socket.on("roomCreated", roomId => {
-    currentRoomName.textContent = roomId;
-    messages.textContent = "Hai creato la stanza.";
-    showScreen(roomScreen);
+socket.on("roomCreated", (roomId) => {
+  currentRoomName.textContent = roomId;
+  messages.textContent = "Hai creato la stanza.";
+  showScreen(roomScreen);
 });
 
 // Conferma entrata nella stanza
-socket.on("roomJoined", roomId => {
-    currentRoomName.textContent = roomId;
-    messages.textContent = "Entrato nella stanza.";
-    showScreen(roomScreen);
+socket.on("roomJoined", (roomId) => {
+  currentRoomName.textContent = roomId;
+  messages.textContent = "Entrato nella stanza.";
+  showScreen(roomScreen);
 });
 
-socket.on("roomUpdate", data => {
-    document.getElementById("roomStatus").textContent =
-        `Giocatori nella stanza: ${data.players.length}/2 | Pronti: ${data.nReady}/2`;
+socket.on("roomUpdate", (data) => {
+  document.getElementById(
+    "roomStatus"
+  ).textContent = `Giocatori nella stanza: ${data.players.length}/2 | Pronti: ${data.nReady}/2`;
 });
 
 // Errore
-socket.on("roomError", msg => {
-    messages.textContent = "❌ " + msg;
+socket.on("roomError", (msg) => {
+  messages.textContent = "❌ " + msg;
 });
 
 // Hai lasciato la stanza
 socket.on("roomLeft", () => {
-    showScreen(lobbyScreen);
-    messages.textContent = "⚠️ Sei tornato alla lobby.";
+  showScreen(lobbyScreen);
+  messages.textContent = "⚠️ Sei tornato alla lobby.";
 });
 
 // GESTIONE PARRTITA
 socket.on("startGame", () => {
-    showScreen(gameScreen);
-    gameStatus.textContent = "La partita è iniziata!";
-    
-    // Resetta il bottone Ready per la prossima partita
-    isReady = false;
-    document.getElementById("readyBtn").textContent = "Ready";
+  showScreen(gameScreen);
+  gameStatus.textContent = "La partita è iniziata!";
 
-    // Pulisce la griglia di gioco
-    gameGrid.innerHTML = "";
+  // Resetta il bottone Ready per la prossima partita
+  isReady = false;
+  document.getElementById("readyBtn").textContent = "Ready";
 
-    // Inizializza la griglia di gioco 6x6 per crearla e visualizzarla nella UI della partita dentro a gameGrid
-    const gridSize = 36; // 6x6
-    
-    for (let i = 0; i < gridSize; i++) {
-        const cell = document.createElement("div");
-        cell.classList.add("cell");
-        cell.dataset.index = i; // memorizza l'indice della cella
-        
-        // Ogni cella inizia come nascosta (mostra un punto interrogativo o icona)
-        cell.textContent = "🫧";
-        
-        // Click sulla cella per rivelare il contenuto
-        cell.onclick = () => {
-            // controllo per vedere ceh sia il turno del giocatore viene gestito dal server
+  // Pulisce la griglia di gioco
+  gameGrid.innerHTML = "";
 
-            // invia l'evento solo se la cella non è già stata rivelata
-            if (!cell.classList.contains("revealed")) {
-                socket.emit("cellClick", i);
-            }
-        };
-        
-        gameGrid.appendChild(cell);
-    }
+  // Inizializza la griglia di gioco 6x6 per crearla e visualizzarla nella UI della partita dentro a gameGrid
+  const gridSize = 36; // 6x6
+
+  for (let i = 0; i < gridSize; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.dataset.index = i; // memorizza l'indice della cella
+
+    // Ogni cella inizia come nascosta (mostra un punto interrogativo o icona)
+    cell.textContent = "🫧";
+
+    // Click sulla cella per rivelare il contenuto
+    cell.onclick = () => {
+      // controllo per vedere ceh sia il turno del giocatore viene gestito dal server
+
+      // invia l'evento solo se la cella non è già stata rivelata
+      if (!cell.classList.contains("revealed")) {
+        socket.emit("cellClick", i);
+      }
+    };
+
+    gameGrid.appendChild(cell);
+  }
 });
 
 // Gestione messaggi inviati dal server durante la partita
 
 //REVEAL CELL
-socket.on("revealCell", data => {
-    const { index, content } = data;
+socket.on("revealCell", (data) => {
+  const { index, content } = data;
 
-    // Aggiorna la cella nella griglia di gioco
-    const cell = gameGrid.querySelector(`div[data-index='${index}']`);
-    if (cell) {
-        cell.classList.add("revealed");
-        // Aggiorna il contenuto della cella in base a ciò che è stato rivelato
-        switch (content) {
-            case 'fish':
-                cell.textContent = "🐟";
-                break;
-            case 'specialFish':
-                cell.textContent = "🐠";
-                break;
-            case 'boot':
-                cell.textContent = "👢";
-                break;
-            case 'bomb':
-                cell.textContent = "💣";
-                break;
-            case 'nuke':
-                cell.textContent = "☢️";
-                break;
-        }
+  // Aggiorna la cella nella griglia di gioco
+  const cell = gameGrid.querySelector(`div[data-index='${index}']`);
+  if (cell) {
+    cell.classList.add("revealed");
+    // Aggiorna il contenuto della cella in base a ciò che è stato rivelato
+    switch (content) {
+      case "fish":
+        cell.textContent = "🐟";
+        gameStatus.textContent = "È stato pescato un pesce!";
+        break;
+      case "specialFish":
+        cell.textContent = "🐠";
+        gameStatus.textContent = "È stato pescato un pesce speciale!";
+        break;
+      case "boot":
+        cell.textContent = "👢";
+        gameStatus.textContent = "È stato pescato uno stivale!";
+        break;
+      case "bomb":
+        cell.textContent = "💣";
+        gameStatus.textContent = "È stata fatta esplodere una bomba!";
+        break;
+      case "nuke":
+        cell.textContent = "☢️";
+        gameStatus.textContent = "È stata fatta esplodere una bomba nucleare!";
+        break;
     }
+  }
 });
+
+// Aggiorna punteggio
+socket.on("updateScores", (data) => {
+  if (data.player === userId) {
+    yourScore.textContent = "Punteggio: " + data.score;
+  } else {
+    opponentScore.textContent = "Punteggio avversario " + data.score;
+  }
+});
+
+// Aggiorna vite
+socket.on("updateLives", (data) => {
+  if (data.player === userId) {
+    yourLives.textContent = "Vite: " + "❤️".repeat(data.lives);
+  } else {
+    opponentLives.textContent = "Vite avversario: " + "❤️".repeat(data.lives);
+  }
+});
+
+// Gestione turno
+socket.on("playerTurn", (data) => {
+  const currentPlayerId = data.startingPlayer || data;
+  if (currentPlayerId === userId) {
+    currentTurn.textContent = "Il tuo turno!";
+  } else {
+    currentTurn.textContent = "Turno dell'avversario";
+  }
+});
+
+socket.on("gameOver", (data) => {
+  if (data.winner === userId) {
+    gameStatus.textContent = "🎉 Hai vinto la partita!";
+  } else {
+    gameStatus.textContent = "💀 Hai perso la partita!";
+  }
+  // le celle rimaste non devono più essere cliccabili
+  const cells = gameGrid.querySelectorAll(".cell");
+  cells.forEach((cell) => cell.classList.add("revealed"));
+});
+
+document.getElementById("leaveGameBtn").onclick = () => {
+  socket.emit("leaveGame");
+};

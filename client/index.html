@@ -7,6 +7,11 @@
 </head>
 <body>
 
+    <!-- USERID ALREADY CONNECTED WARNING -->
+    <div id="userIdWarning" class="hidden">
+        <p>Attenzione: questo UserID è già collegato da un'altra scheda o dispositivo.</p>
+    </div>
+
     <!-- 🟦 LOBBY SCREEN -->
     <div id="lobbyScreen" class="screen">
         <h1>Fish Tha Bomb</h1>
@@ -44,7 +49,7 @@
          <!-- in alto a tutto il timer del turno-->
         <div id="turnTimer">Tempo rimasto: <span id="timeLeft">20</span> secondi</div>
          <!-- bisogna inserire gli elementi utili per la partita: in alto ci deve essere scritto "Turno di [nome giocatore]" -->
-         <h2 id="currentTurn">Turno di [tu | avversario]</h2>
+         <h2 id="currentTurn">Turno</h2>
         <!-- sotto vanno messe le vite dell'avversatio con 3 emoji di cuori -->
         <p id="opponentLives">Vite avversario: ❤️❤️❤️</p>
         <!-- qui va messo il punteggio dell'avversario -->
@@ -54,9 +59,9 @@
             <!-- Le celle della griglia verranno generate dinamicamente con JavaScript -->
         </div>
         <!-- qui le nostre vite con 3 emoji di cuori -->
-        <p id="yourLives">Le tue vite: ❤️❤️❤️</p>
+        <p id="yourLives">Vite: ❤️❤️❤️</p>
         <!-- qui va messo il tuo punteggio -->
-        <p id="yourScore">Il tuo punteggio: 0</p>
+        <p id="yourScore">Punteggio: 0</p>
         <!-- qui va messo lo stato della partita (ad esempio "Il tuo turno", "Turno avversario", "Hai perso una vita", ecc.) -->
         <p id="gameStatus">Stato partita: In attesa...</p>
         <!-- qui va messo il pulsante per abbandonare la partita -->
