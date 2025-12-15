@@ -113,6 +113,13 @@ socket.on("connect", () => {
     "Connesso! SocketID: " + socket.id + " | UserID: " + userId;
 });
 
+// Gestione connessione duplicata | importante per evitare che lo stesso userId venga usato in più tab o dispositivi
+socket.on("userAlreadyConnected", () => {
+  console.warn("⚠️ Questo UserID è già connesso da un'altra tab o dispositivo.");
+  showScreen(userIdWarning);
+  status.textContent = "❌ UserID già connesso altrove";
+});
+
 // Lista stanze con bottoni
 socket.on("roomList", (rooms) => {
   roomList.innerHTML = "";

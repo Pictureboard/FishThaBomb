@@ -10,6 +10,9 @@ const io = new Server(server);
 // Serve la cartella client come contenuto statico con express
 app.use(express.static(path.join(__dirname, "../client")));
 
+// Map per tracciare userId connessi (evita connessioni multiple) | importante
+const connectedUsers = new Map(); // userId -> socketId
+
 // Oggetto per gestire la stanza
 const roomsData = {};
 
@@ -50,6 +53,20 @@ io.on("connection", (socket) => {
 
   // UserID persistente
   socket.on("registerUser", (userId) => {
+    // Controlla se questo userId è già connesso | importante per evitare connessioni multiple
+    if (connectedUsers.has(userId)) {
+      console.log(
+        `⚠️ [REGISTER DENIED] User ${userId} già connesso con socket ${connectedUsers.get(
+          userId
+        )}, tentativo da ${socket.id}`
+      );
+      socket.emit("userAlreadyConnected");
+      socket.disconnect();
+      return;
+    }
+
+    // Registra il nuovo userId
+    connectedUsers.set(userId, socket.id);
     socket.userId = userId;
     console.log("[REGISTER] User:", userId, "- socket:", socket.id);
     sendRoomList();
@@ -173,6 +190,12 @@ io.on("connection", (socket) => {
   // --------------------------------
   socket.on("disconnect", () => {
     console.log("Client disconnesso:", socket.id);
+
+    // Rimuovi userId dalla lista degli utenti connessi
+    if (socket.userId) {
+      connectedUsers.delete(socket.userId);
+      console.log(`[DISCONNECT] User ${socket.userId} rimosso dalla lista connessi`);
+    }
 
     const existing = findRoomByUser(socket.userId);
     if (existing) {
