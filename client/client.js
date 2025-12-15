@@ -9,6 +9,9 @@ if (!userId) {
 
 // aggiungi controllo per verificare che questo userid non sia già collegato al server con altro socket (con un'altra istanza del client aka un'altra scheda aperta)
 
+// questo controllo deve basarsi sul fatto che il server mantenga una lista di userId collegati attivamente (?) magari ci sono altri modi
+// need to figure out how to implement this check properly
+
 console.log("UserID locale:", userId);
 
 // Connessione al server

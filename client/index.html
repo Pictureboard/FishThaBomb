@@ -2,19 +2,20 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Fish Tha Bomb</title>
+    <title>FishThaBomb</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- USERID ALREADY CONNECTED WARNING -->
+    <!-- USERID ALREADY CONNECTED WARNING !!! -->
+    <!-- still need to implement :( -->
     <div id="userIdWarning" class="hidden">
         <p>Attenzione: questo UserID è già collegato da un'altra scheda o dispositivo.</p>
     </div>
 
     <!-- 🟦 LOBBY SCREEN -->
     <div id="lobbyScreen" class="screen">
-        <h1>Fish Tha Bomb</h1>
+        <h1>FishThaBomb</h1>
 
         <div class="card">
             <h2>Lobby</h2>
@@ -35,6 +36,8 @@
 
     <!-- 🟩 ROOM SCREEN -->
     <div id="roomScreen" class="screen hidden">
+        <h1>FishThaBomb</h1>
+
         <h2>Stanza: <span id="currentRoomName"></span></h2>
         <p id="roomStatus">In attesa di altri giocatori...</p>
 
@@ -44,7 +47,8 @@
 
 
     <!-- 🟥 GAME SCREEN -->
-    <div id="gameScreen" class="screen hidden">       
+    <div id="gameScreen" class="screen hidden">
+        <h1>FishThaBomb</h1>
          <!-- timer verrà implementato successivamente -->
         <div id="turnTimer">Tempo rimasto: <span id="timeLeft">20</span> secondi</div>
          <!-- "Turno di [tu | avversario]" -->
@@ -65,6 +69,10 @@
         <p id="gameStatus">Stato partita: In attesa...</p>
         <!-- pulsante per abbandonare la partita -->
         <button id="leaveGameBtn">Abbandona Partita</button>
+
+        <!-- could be fun to add a chat between players to let them insult each other -->
+        <!-- save that ^^^ for later -->
+
     </div>
 
 
