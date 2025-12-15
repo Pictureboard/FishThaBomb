@@ -44,13 +44,25 @@ const leaveGameBtn = document.getElementById("leaveGameBtn");
 
 // Bottoni
 document.getElementById("createBtn").onclick = () => {
+  // facciamo un controllo con una regex per evitare caratteri strani nel nome della stanza (solo lettere, numeri, trattini e underscore)
+
   const roomId = roomInput.value.trim();
-  if (roomId !== "") socket.emit("createRoom", roomId);
+  const validRoomId = /^[a-zA-Z0-9_\-]+$/.test(roomId);
+  if (roomId !== "" && validRoomId) socket.emit("createRoom", roomId);
+  else {
+    messages.textContent =
+      "❌ Nome stanza non valido.";
+  }
 };
 
 document.getElementById("joinBtn").onclick = () => {
   const roomId = roomInput.value.trim();
-  if (roomId !== "") socket.emit("joinRoom", roomId);
+  const validRoomId = /^[a-zA-Z0-9_\-]+$/.test(roomId);
+  if (roomId !== "" && validRoomId) socket.emit("joinRoom", roomId);
+    else {
+        messages.textContent =
+            "❌ Nome stanza non valido.";
+    }
 };
 
 /*document.getElementById("readyBtn").onclick = () => {
@@ -66,7 +78,7 @@ document.getElementById("joinBtn").onclick = () => {
         socket.emit("playerNotReady");
     }
 
-    // c'è modo per non basarsi sul testo del bottone per scegliere che messaggio inviarer al server?
+    // non bisogna basarsi sul testo del bottone per scegliere che messaggio inviare al server
 
 };*/
 
