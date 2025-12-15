@@ -43,28 +43,27 @@
     </div>
 
 
-    <!-- 🟥 GAME SCREEN (ancora vuota, la useremo dopo) -->
-    <div id="gameScreen" class="screen hidden">
-        <!-- <h2>Partita in corso...</h2> -->
-         <!-- in alto a tutto il timer del turno-->
+    <!-- 🟥 GAME SCREEN -->
+    <div id="gameScreen" class="screen hidden">       
+         <!-- timer verrà implementato successivamente -->
         <div id="turnTimer">Tempo rimasto: <span id="timeLeft">20</span> secondi</div>
-         <!-- bisogna inserire gli elementi utili per la partita: in alto ci deve essere scritto "Turno di [nome giocatore]" -->
+         <!-- "Turno di [tu | avversario]" -->
          <h2 id="currentTurn">Turno</h2>
-        <!-- sotto vanno messe le vite dell'avversatio con 3 emoji di cuori -->
+        <!-- vite dell'avversario con 3 emoji di cuori -->
         <p id="opponentLives">Vite avversario: ❤️❤️❤️</p>
-        <!-- qui va messo il punteggio dell'avversario -->
+        <!-- punteggio dell'avversario -->
         <p id="opponentScore">Punteggio avversario: 0</p>
-        <!-- qui va messa la griglia di gioco 6x6  -->
+        <!-- griglia di gioco 6x6  -->
         <div id="gameGrid" class="grid-6x6">
             <!-- Le celle della griglia verranno generate dinamicamente con JavaScript -->
         </div>
-        <!-- qui le nostre vite con 3 emoji di cuori -->
+        <!-- vite con 3 emoji di cuori -->
         <p id="yourLives">Vite: ❤️❤️❤️</p>
-        <!-- qui va messo il tuo punteggio -->
+        <!-- tuo punteggio -->
         <p id="yourScore">Punteggio: 0</p>
-        <!-- qui va messo lo stato della partita (ad esempio "Il tuo turno", "Turno avversario", "Hai perso una vita", ecc.) -->
+        <!-- stato della partita (ad esempio "Il tuo turno", "Turno avversario", "Hai perso una vita", ecc.) -->
         <p id="gameStatus">Stato partita: In attesa...</p>
-        <!-- qui va messo il pulsante per abbandonare la partita -->
+        <!-- pulsante per abbandonare la partita -->
         <button id="leaveGameBtn">Abbandona Partita</button>
     </div>
 

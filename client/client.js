@@ -29,8 +29,8 @@ const currentRoomName = document.getElementById("currentRoomName");
 
 // Game Screen elements
 const gameStatus = document.getElementById("gameStatus");
-const turnTimer = document.getElementById("turnTimer");
-const timeLeft = document.getElementById("timeLeft");
+//const turnTimer = document.getElementById("turnTimer");
+//const timeLeft = document.getElementById("timeLeft");
 const currentTurn = document.getElementById("currentTurn");
 const opponentLives = document.getElementById("opponentLives");
 const opponentScore = document.getElementById("opponentScore");

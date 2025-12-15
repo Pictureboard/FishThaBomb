@@ -310,6 +310,13 @@ io.on("connection", (socket) => {
     if (!room) return;
     io.to(roomId).emit("startGame", {}); // partita inizia qui
 
+    // toglie i ready a tutti i giocatori della stanza
+    room.nReady = 0;
+    for (const playerId of room.players) {
+      room.playersData[playerId].ready = false;
+    }
+
+
     console.log(`🎮 Partita iniziata nella stanza ${roomId}`);
 
     //popola boardHidden con valori pseudo-random
@@ -354,7 +361,7 @@ io.on("connection", (socket) => {
     room.boardHidden = elements;
 
     // fai un console log per vedere la boardHidden generata
-    console.log(`🧩 boardHidden per la stanza ${roomId}:`, room.boardHidden);
+    ///console.log(`🧩 boardHidden per la stanza ${roomId}:`, room.boardHidden);
 
     // scegli il giocatore che inizia
     const startingPlayer =
@@ -454,10 +461,10 @@ io.on("connection", (socket) => {
     }
 
     // debug console log per vedere la boardHidden aggiornata
-    console.log(
+    /*console.log(
       `🧩 boardHidden aggiornata per la stanza ${roomId}:`,
       room.boardHidden
-    );
+    );*/
 
     // Controlla vittoria/sconfitta
     if (room.playersData[socket.userId].score >= 5) {
